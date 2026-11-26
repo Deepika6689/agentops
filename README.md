@@ -7,9 +7,16 @@ A supervisor agent breaks a task into subtasks and delegates them to specialist 
 ## Why this project
  
 Autonomous agents can fail silently, give low-confidence answers or take sensitive actions unchecked. AgentOps addresses this with three controls: **review** before results are accepted, **human approval** before the report is saved, and **traces** to see what happened in each run.
-🔗 **Live demo:** https://agentops-cr5j.onrender.com
+[![Live Demo](https://img.shields.io/badge/Live_Demo-AgentOps-2ea44f?style=for-the-badge&logo=render&logoColor=white)](https://agentops-cr5j.onrender.com)
 
 > Runs in demo mode (simulated agent text). Free hosting: the first load can take about a minute, and saved runs reset on restarts.
+
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?logo=langchain&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
 
 ## Screenshots
 
