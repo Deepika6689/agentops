@@ -160,4 +160,4 @@ The full flow was also manually tested on Windows.
 
  ## License
 
-MIT
+ MIT
