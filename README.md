@@ -7,21 +7,28 @@ A supervisor agent breaks a task into subtasks and delegates them to specialist 
 ## Why this project
  
 Autonomous agents can fail silently, give low-confidence answers or take sensitive actions unchecked. AgentOps addresses this with three controls: **review** before results are accepted, **human approval** before the report is saved, and **traces** to see what happened in each run.
+
+## Screenshots
+
+### Overview Dashboard
+<img width="1600" height="750" alt="image" src="https://github.com/user-attachments/assets/7bbf776a-4e52-4e38-a22d-7a9ac673b1a4" />
+
+
+### Human-in-the-Loop Approval
+<img width="1600" height="759" alt="image" src="https://github.com/user-attachments/assets/f5106642-ec81-4d39-97fe-8e429367cff1" />
+
+
+### Trace Explorer
+<img width="1372" height="911" alt="image" src="https://github.com/user-attachments/assets/f5ef9d4c-9ef5-4ed7-8ffe-e2a8660156a4" />
+<img width="1368" height="887" alt="image" src="https://github.com/user-attachments/assets/9c90fb44-143a-4151-92a4-dbbd3a221b63" />
+
  
 ## Architecture
  
 ```mermaid
-flowchart TD
-    U[User task] --> M[Memory retrieval]
-    M --> P[Supervisor: plan subtasks]
-    P --> E[Specialists: Research / Data Analysis / Writing]
-    E --> R{Reviewer}
-    R -- retry --> E
-    R -- accepted --> G{Approval gate}
-    G -- approval not needed --> F[Finalize and save]
-    G -- approval needed --> H[Human review]
-    H -- approve or edit --> F
-    H -- reject --> X[No file written]
+flowchart LR
+    A[Task + Memory] --> B[Supervisor] --> C[Specialists] --> D[Reviewer] --> E[Approval Gate] --> F[Save Report]
+    D -- retry --> C
 ```
  
 ## Key features
