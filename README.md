@@ -60,16 +60,16 @@ flowchart LR
 - Notes search
 - Report saving
 ### Human-in-the-loop
-- Approve, edit or reject before the report is saved
-- Triggered by user choice, low confidence or sensitive wording
-- Pending approvals survive a server restart
-- Duplicate approvals are rejected (HTTP 409)
+- Approve, edit or reject before the report is saved.
+- Triggered by user choice, low confidence or sensitive wording.
+- Pending approvals survive a server restart.
+- Duplicate approvals are rejected (HTTP 409).
 ### Memory
-- Retrieves related past runs using TF-IDF text matching
-- Memory page with search, ranking and deletion
+- Retrieves related past runs using TF-IDF text matching.
+- Memory page with search, ranking and deletion.
 ### Observability
-- Trace explorer for each run, including tool errors
-- Overview dashboard with run metrics
+- Trace explorer for each run, including tool errors.
+- Overview dashboard with run metrics.
 ## Tech stack
  
 | Layer | Tools |
