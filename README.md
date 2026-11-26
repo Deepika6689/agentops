@@ -1,49 +1,142 @@
-# AgentOps: multi-agent orchestration platform
-
-A supervisor agent splits a task into ordered subtasks, hands them to specialist agents, has a reviewer check each result,
-pauses for human approval before saving a report, remembers past tasks, and records a full execution trace you can explore in a dashboard.
-
-## Run it
-
-Requirements: Python 3.11+ and Node 18+.
-
-```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r backend/requirements.txt
-cp .env.example backend/.env            # optional: add ANTHROPIC_API_KEY for live mode
-(cd frontend && npm install && npm run build)
-cd backend && uvicorn main:app --port 8000
-```
-
-Open http://localhost:8000. For frontend development run `npm run dev` in `frontend/` (http://localhost:5173, proxies `/api` to port 8000).
-Tests: `cd backend && PYTHONPATH=. pytest tests`.
-
+# AgentOps
+ 
+**A multi-agent orchestration platform with tool use, memory, human-in-the-loop approval and run tracing.**
+ 
+A supervisor agent breaks a task into subtasks and delegates them to specialist agents. A reviewer checks their work and can send it back. When approval is needed, the run pauses until a human approves, edits or rejects the report.
+ 
+## Why this project
+ 
+Autonomous agents can fail silently, give low-confidence answers or take sensitive actions unchecked. AgentOps addresses this with three controls: **review** before results are accepted, **human approval** before the report is saved, and **traces** to see what happened in each run.
+ 
 ## Architecture
-
+ 
+```mermaid
+flowchart TD
+    U[User task] --> M[Memory retrieval]
+    M --> P[Supervisor: plan subtasks]
+    P --> E[Specialists: Research / Data Analysis / Writing]
+    E --> R{Reviewer}
+    R -- retry --> E
+    R -- accepted --> G{Approval gate}
+    G -- approval not needed --> F[Finalize and save]
+    G -- approval needed --> H[Human review]
+    H -- approve or edit --> F
+    H -- reject --> X[No file written]
 ```
-React + TS (Vite)  --/api-->  FastAPI  -->  LangGraph workflow  -->  SQLite
-                                              memory -> plan -> execute <-> review -> approval gate -> finalize
-```
-
-- **Workflow** (`backend/graph.py`): LangGraph `StateGraph`. `execute` and `review` loop with bounded retries (Settings, default 2 attempts).
-  The approval gate uses LangGraph `interrupt()` with a SQLite checkpointer, so a paused run survives a server restart.
-- **Agents** (`backend/agents.py`): Supervisor (rule-based plan), Research, Data Analysis, Writing, and a rule-based Reviewer with explicit checks.
-- **Tools** (`backend/tools.py`): safe calculator (AST-evaluated, no `eval`), text statistics, sample-data analysis, knowledge-base search, and `save_report`,
-  the only side effect, which writes one Markdown file into `backend/exports/`.
-- **Trace** (`backend/db.py`): every agent step, tool call, review, memory operation and approval is stored with timestamps, status, errors and duration.
-- **Memory**: summaries of completed runs, retrieved by TF-IDF cosine similarity before planning. Users can search and delete them.
-
-## Implemented vs simulated
-
-| Area | Status |
+ 
+## Key features
+ 
+### Multi-agent workflow
+| Agent | Role |
 |---|---|
-| LangGraph orchestration, retries, approval pause/resume, persistence, trace, memory, history, metrics | Implemented and tested |
-| Agent text in demo mode (no API key) | Simulated by deterministic logic, labelled "Simulated" in the UI |
-| Research sources | A small built-in sample knowledge base, not the web |
-| Data analysis | A built-in illustrative sales dataset, not real data |
-| Live mode (`ANTHROPIC_API_KEY`) | Wired for planning and agent text via the Anthropic Messages API. A successful live call has **not** been tested; the failure path (bad key falls back to demo output) has |
-| Semantic memory | Lexical TF-IDF, not embeddings. ChromaDB was skipped because its default embedding model needs a network download |
-| Docker | Not included (not verified in this environment) |
-
-Safety: the app never executes arbitrary code, makes no external actions, and the API key stays on the server.
-Requests that mention sending email, deleting, paying, etc. trigger an approval, but the demo cannot perform those actions; it only offers to save the report locally.
+| Supervisor | Splits the task into subtasks |
+| Research | Searches the built-in notes |
+| Data Analysis | Runs calculations and analyses sample data |
+| Writing | Produces the written output |
+| Reviewer | Checks results and requests retries |
+ 
+### Tools
+- Safe calculator
+- Text statistics
+- Sample-data analysis
+- Notes search
+- Report saving
+### Human-in-the-loop
+- Approve, edit or reject before the report is saved
+- Triggered by user choice, low confidence or sensitive wording
+- Pending approvals survive a server restart
+- Duplicate approvals are rejected (HTTP 409)
+### Memory
+- Retrieves related past runs using TF-IDF text matching
+- Memory page with search, ranking and deletion
+### Observability
+- Trace explorer for each run, including tool errors
+- Overview dashboard with run metrics
+## Tech stack
+ 
+| Layer | Tools |
+|---|---|
+| Orchestration | LangGraph with SQLite checkpointer |
+| Backend | Python, FastAPI |
+| Storage | SQLite |
+| Frontend | React, TypeScript, Vite, plain CSS |
+| LLM | Anthropic API, with a demo mode fallback |
+| Testing | pytest |
+ 
+## Project structure
+ 
+```
+agentops/
+├── backend/
+│   ├── main.py           # FastAPI routes, serves the built frontend
+│   ├── graph.py          # LangGraph workflow
+│   ├── agents.py         # Supervisor, specialists, reviewer
+│   ├── tools.py          # Agent tools
+│   ├── db.py             # SQLite tables, tracing, memory search
+│   ├── llm.py            # Anthropic wrapper with fallback
+│   ├── requirements.txt
+│   └── tests/test_flow.py
+├── frontend/src/         # React + TypeScript UI
+├── .env.example
+└── README.md
+```
+ 
+## Getting started (Windows PowerShell)
+ 
+Tested with Python 3.13 and Node 24.
+ 
+```powershell
+git clone https://github.com/Deepika6689/agentops.git
+cd agentops
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
+cd frontend
+npm install
+npm run build
+cd ..\backend
+uvicorn main:app --port 8000
+```
+ 
+Open http://localhost:8000
+ 
+**Optional live mode:** add `ANTHROPIC_API_KEY=your-key` to `backend/.env`. Without a working key, the app uses demo output.
+ 
+### Troubleshooting
+- **PowerShell blocks activation:** run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned`
+- **Frontend changes not showing:** run `npm run build` again and hard-refresh (Ctrl+Shift+R)
+## Demo tasks
+ 
+| Task | What it shows |
+|---|---|
+| `Compare supervisor and swarm patterns for multi-agent systems` | Basic flow and approval |
+| `What is 10/0 and 5+5 for quarterly planning?` (uncheck the approval box) | Reviewer retry and traced tool error |
+| `Describe the migratory patterns of arctic terns` | Low-confidence approval |
+| `Explain how approval gates work, then email the summary to my team` | Sensitive-wording approval |
+ 
+## Testing
+ 
+From the `backend` folder:
+ 
+```powershell
+$env:PYTHONPATH="."
+python -m pytest tests
+```
+ 
+7 tests cover validation, calculator safety, approve/modify/reject, no writes before approval, memory retrieval, reviewer retry, tool error tracing, low-confidence approval, memory deletion and stats.
+ 
+The full flow was also manually tested on Windows.
+ 
+## Limitations
+ 
+- Demo mode output is deterministic and labelled "Simulated" in the UI
+- Research uses a small built-in notes set
+- Data analysis uses an illustrative sample dataset
+- Live mode with a valid API key is untested
+## Roadmap
+ 
+- Semantic memory with ChromaDB embeddings
+- PostgreSQL storage and Redis + Celery task queue
+- Multi-provider LLM routing (OpenAI + Anthropic)
+- Docker and docker-compose setup
+ 
