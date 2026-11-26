@@ -157,4 +157,7 @@ The full flow was also manually tested on Windows.
 - PostgreSQL storage and Redis + Celery task queue
 - Multi-provider LLM routing (OpenAI + Anthropic)
 - Docker and docker-compose setup
- 
+
+ ## License
+
+MIT
